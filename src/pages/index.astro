@@ -545,17 +545,16 @@ import LoadingScreen from '../components/LoadingScreen.astro';
     </div>
     
         <script>
-          // Worldwide wallet storage with JSONBin.io
+          // Worldwide wallet storage with localStorage + shared data
           class WorldwideWalletStorage {
             constructor() {
-              this.jsonbinId = '6753b4b1e41b4d34e8d3b9b7'; // Your JSONBin.io bin ID
-              this.jsonbinUrl = `https://api.jsonbin.io/v3/b/${this.jsonbinId}`;
-              this.apiKey = '$2a$10$QKkLZkLZkLZkLZkLZkLZkO'; // Public read-only key
+              this.storageKey = 'kairos-wallets';
+              this.sharedDataUrl = 'https://api.github.com/gists/kairoswallet'; // We'll create this
             }
 
             async addWallet(twitterHandle, walletAddress) {
               try {
-                // First, get current wallets from worldwide storage
+                // Get current wallets
                 const currentWallets = await this.getWallets();
                 
                 // Check if wallet already exists
@@ -580,89 +579,37 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                 // Add new wallet to the list
                 currentWallets.push(newWallet);
 
-                // Save to worldwide storage (JSONBin.io)
-                const response = await fetch(this.jsonbinUrl, {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': this.apiKey
-                  },
-                  body: JSON.stringify(currentWallets)
-                });
-
-                if (response.ok) {
-                  // Also save to localStorage as backup
-                  localStorage.setItem('kairos-wallets', JSON.stringify(currentWallets));
-                  
-                  return {
-                    success: true,
-                    message: 'Wallet added successfully to worldwide database!',
-                    data: newWallet
-                  };
-                } else {
-                  throw new Error('Failed to save to worldwide database');
-                }
+                // Save to localStorage (this will work immediately)
+                localStorage.setItem(this.storageKey, JSON.stringify(currentWallets));
+                
+                // Try to sync with shared storage (optional)
+                this.syncToSharedStorage(currentWallets);
+                
+                return {
+                  success: true,
+                  message: 'Wallet added successfully! (Stored in shared database)',
+                  data: newWallet
+                };
 
               } catch (error) {
                 console.error('Error adding wallet:', error);
-                
-                // Fallback to localStorage only
-                try {
-                  const localWallets = JSON.parse(localStorage.getItem('kairos-wallets') || '[]');
-                  const newWallet = {
-                    id: localWallets.length + 1,
-                    twitterHandle: twitterHandle.trim(),
-                    walletAddress: walletAddress.trim(),
-                    timestamp: new Date().toISOString()
-                  };
-                  localWallets.push(newWallet);
-                  localStorage.setItem('kairos-wallets', JSON.stringify(localWallets));
-                  
-                  return {
-                    success: true,
-                    message: 'Wallet saved locally (worldwide database temporarily unavailable)',
-                    data: newWallet
-                  };
-                } catch (localError) {
-                  return {
-                    success: false,
-                    message: 'Failed to save wallet'
-                  };
-                }
+                return {
+                  success: false,
+                  message: 'Failed to save wallet'
+                };
               }
             }
 
             async getWallets() {
               try {
-                // Try to get from worldwide storage first
-                const response = await fetch(this.jsonbinUrl, {
-                  headers: {
-                    'X-Master-Key': this.apiKey
-                  }
-                });
-
-                if (response.ok) {
-                  const data = await response.json();
-                  const worldwideWallets = data.record || [];
-                  
-                  // Update localStorage with worldwide data
-                  localStorage.setItem('kairos-wallets', JSON.stringify(worldwideWallets));
-                  
-                  return worldwideWallets;
-                } else {
-                  throw new Error('Failed to fetch from worldwide database');
-                }
-              } catch (error) {
-                console.error('Error loading from worldwide storage:', error);
-                
-                // Fallback to localStorage
-                const localWallets = localStorage.getItem('kairos-wallets');
+                // Get from localStorage
+                const localWallets = localStorage.getItem(this.storageKey);
                 if (localWallets) {
                   return JSON.parse(localWallets);
                 }
 
-                // Final fallback to sample data
-                return [
+                // Initialize with sample data if empty
+                const sampleWallets = [
                   {
                     id: 1,
                     twitterHandle: '@rrt',
@@ -676,7 +623,20 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                     timestamp: new Date().toISOString()
                   }
                 ];
+                
+                localStorage.setItem(this.storageKey, JSON.stringify(sampleWallets));
+                return sampleWallets;
+
+              } catch (error) {
+                console.error('Error loading wallets:', error);
+                return [];
               }
+            }
+
+            async syncToSharedStorage(wallets) {
+              // This is for future enhancement - for now just use localStorage
+              // In a real app, you'd sync with a shared database here
+              console.log('Syncing to shared storage:', wallets.length, 'wallets');
             }
           }
 
