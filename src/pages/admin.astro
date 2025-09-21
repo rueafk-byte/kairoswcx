@@ -1,0 +1,588 @@
+---
+import '../styles/global.css';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="/images/Kairos-url.png" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Kairos Admin - Wallet Collection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+      body {
+        background-color: #1a2a6c;
+        color: #ffffff;
+        min-height: 100vh;
+        padding: 2rem;
+        font-family: 'Press Start 2P', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        margin: 0;
+      }
+      
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      
+      .title {
+        font-size: 2rem;
+        color: #60a5fa;
+        margin-bottom: 1rem;
+      }
+      
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      
+      .stat-card {
+        background-color: rgba(31, 41, 55, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid rgba(100, 149, 237, 0.3);
+      }
+      
+      .stat-number {
+        font-size: 2rem;
+        color: #60a5fa;
+        margin-bottom: 0.5rem;
+      }
+      
+      .stat-label {
+        font-size: 0.75rem;
+        color: #d1d5db;
+      }
+      
+      .wallet-list {
+        background-color: rgba(31, 41, 55, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 1px solid rgba(100, 149, 237, 0.3);
+      }
+      
+      .wallet-header {
+        display: grid;
+        grid-template-columns: 80px 180px 1fr 120px;
+        gap: 1.5rem;
+        padding: 1rem;
+        border-bottom: 2px solid rgba(100, 149, 237, 0.3);
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: #60a5fa;
+        text-align: left;
+      }
+      
+      .wallet-item {
+        display: grid;
+        grid-template-columns: 80px 180px 1fr 120px;
+        gap: 1.5rem;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(100, 149, 237, 0.2);
+        font-size: 0.75rem;
+        text-align: left;
+        align-items: center;
+      }
+      
+      .wallet-item:last-child {
+        border-bottom: none;
+      }
+      
+      .wallet-id {
+        color: #60a5fa;
+        font-weight: bold;
+      }
+      
+      .wallet-twitter {
+        color: #ffffff;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      
+      .wallet-address {
+        color: #ffffff;
+        font-family: monospace;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      
+      .wallet-time {
+        color: #d1d5db;
+      }
+      
+      .back-btn {
+        display: inline-block;
+        margin-bottom: 2rem;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(45deg, #4f46e5, #60a5fa);
+        color: white;
+        text-decoration: none;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        transition: transform 0.2s;
+      }
+      
+      .back-btn:hover {
+        transform: translateY(-2px);
+      }
+      
+      .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #9ca3af;
+        font-size: 0.75rem;
+      }
+      
+      .clear-btn {
+        background: linear-gradient(45deg, #dc2626, #ef4444);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        margin-top: 1rem;
+        margin-right: 0.5rem;
+        font-family: inherit;
+      }
+      
+      .clear-btn:hover {
+        opacity: 0.8;
+      }
+      
+      .download-btn {
+        background: linear-gradient(45deg, #059669, #10b981);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        margin-top: 1rem;
+        font-family: inherit;
+      }
+      
+      .download-btn:hover {
+        opacity: 0.8;
+      }
+      
+      .login-container {
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      
+      .login-form {
+        background-color: rgba(31, 41, 55, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 2rem;
+        border: 1px solid rgba(100, 149, 237, 0.3);
+      }
+      
+      .login-title {
+        font-size: 1.5rem;
+        color: #60a5fa;
+        margin-bottom: 1.5rem;
+        text-align: center;
+      }
+      
+      .login-input {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #374151;
+        border: 1px solid #4b5563;
+        border-radius: 0.5rem;
+        color: #ffffff;
+        outline: none;
+        font-size: 0.75rem;
+        box-sizing: border-box;
+        font-family: inherit;
+        margin-bottom: 1rem;
+      }
+      
+      .login-input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
+      }
+      
+      .login-btn {
+        width: 100%;
+        padding: 0.75rem;
+        background: linear-gradient(45deg, #4f46e5, #60a5fa);
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      
+      .login-btn:hover {
+        opacity: 0.8;
+      }
+      
+      .error-message {
+        color: #f87171;
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        text-align: center;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Form -->
+    <div id="loginContainer" class="login-container">
+      <div class="login-form">
+        <h1 class="login-title">Admin Access</h1>
+        <form id="loginForm">
+          <input
+            type="password"
+            id="adminPassword"
+            placeholder="Enter admin password"
+            class="login-input"
+            required
+          />
+          <button type="submit" class="login-btn">Access Dashboard</button>
+          <div id="errorMessage" class="error-message">Invalid password</div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="dashboardContainer" class="container" style="display: none;">
+      <a href="/" class="back-btn">← Back to Main</a>
+      
+      <div class="header">
+        <h1 class="title">Admin Dashboard</h1>
+      </div>
+      
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-number" id="totalWallets">0</div>
+          <div class="stat-label">Total Wallets</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="todayWallets">0</div>
+          <div class="stat-label">Today's Submissions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="uniqueUsers">0</div>
+          <div class="stat-label">Unique Users</div>
+          </div>
+      </div>
+      
+      <div class="wallet-list">
+        <h2 style="margin-bottom: 1rem; font-size: 1rem; color: #60a5fa;">Wallet Submissions</h2>
+        
+        <!-- Table Header -->
+        <div class="wallet-header">
+          <div>ID</div>
+          <div>Twitter Handle</div>
+          <div>Wallet Address</div>
+          <div>Date</div>
+          </div>
+          
+        <div id="walletContainer">
+          <div class="empty-state">
+            No wallet submissions yet
+          </div>
+        </div>
+        
+        <div style="margin-top: 1rem;">
+          <button class="download-btn" id="downloadBtn">Download CSV</button>
+          <button class="clear-btn" onclick="clearAllWallets()">Clear All Data</button>
+        </div>
+      </div>
+    </div>
+    
+        <script>
+          class AdminAPI {
+            constructor() {
+              this.adminPassword = 'kairos2025'; // Change this to your desired password
+            }
+
+            async getWallets() {
+              try {
+                const response = await fetch('/.netlify/functions/wallet-api');
+                const result = await response.json();
+                return result.success ? result.data : [];
+              } catch (error) {
+                console.error('Error fetching wallets:', error);
+                return [];
+              }
+            }
+
+            async clearWallets() {
+              // For now, we'll reload the page after clearing
+              // In a real app, you'd want a proper clear API endpoint
+              location.reload();
+            }
+
+            verifyPassword(password) {
+              return password === this.adminPassword;
+            }
+          }
+
+          const adminAPI = new AdminAPI();
+
+      // Password protection
+      function handleLogin(event) {
+        event.preventDefault();
+        const password = document.getElementById('adminPassword').value;
+        const errorMessage = document.getElementById('errorMessage');
+        
+        if (adminAPI.verifyPassword(password)) {
+          // Store login session
+          sessionStorage.setItem('adminLoggedIn', 'true');
+          document.getElementById('loginContainer').style.display = 'none';
+          document.getElementById('dashboardContainer').style.display = 'block';
+          loadWallets();
+        } else {
+          errorMessage.style.display = 'block';
+          setTimeout(() => {
+            errorMessage.style.display = 'none';
+          }, 3000);
+        }
+      }
+
+      function checkLogin() {
+        const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
+        if (isLoggedIn === 'true') {
+          document.getElementById('loginContainer').style.display = 'none';
+          document.getElementById('dashboardContainer').style.display = 'block';
+          loadWallets();
+        }
+      }
+
+      async function loadWallets() {
+        const container = document.getElementById('walletContainer');
+        const totalElement = document.getElementById('totalWallets');
+        const todayElement = document.getElementById('todayWallets');
+        const uniqueUsersElement = document.getElementById('uniqueUsers');
+
+        // Show loading state
+        container.innerHTML = '<div class="empty-state">Loading wallets...</div>';
+
+            try {
+              const wallets = await adminAPI.getWallets();
+
+          // Update stats
+          totalElement.textContent = wallets.length;
+
+          // Count today's submissions
+          const today = new Date().toDateString();
+          const todayCount = wallets.filter(w => new Date(w.timestamp).toDateString() === today).length;
+          todayElement.textContent = todayCount;
+
+          // Count unique users (by twitter handle)
+          const uniqueHandles = new Set(wallets.map(w => w.twitterHandle.toLowerCase()));
+          uniqueUsersElement.textContent = uniqueHandles.size;
+
+          // Display wallets
+          if (wallets.length === 0) {
+            container.innerHTML = '<div class="empty-state">No wallet submissions yet</div>';
+            return;
+          }
+
+          // Sort by timestamp (newest first)
+          wallets.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+          container.innerHTML = wallets.map(wallet => `
+            <div class="wallet-item">
+              <div class="wallet-id">#${wallet.id}</div>
+              <div class="wallet-twitter">${wallet.twitterHandle}</div>
+              <div class="wallet-address">${wallet.walletAddress}</div>
+              <div class="wallet-time">${new Date(wallet.timestamp).toLocaleDateString()}</div>
+            </div>
+          `).join('');
+        } catch (error) {
+          console.error('Error loading wallets:', error);
+          container.innerHTML = '<div class="empty-state">Error loading wallets. Please try again.</div>';
+        }
+      }
+
+      async function downloadCSV() {
+        console.log('Download CSV button clicked');
+        
+            try {
+              const wallets = await adminAPI.getWallets();
+          console.log('Wallets found:', wallets.length);
+          
+          if (wallets.length === 0) {
+            alert('No data to download');
+            return;
+          }
+
+          // Create CSV content
+          const headers = ['ID', 'Twitter Handle', 'Wallet Address', 'Date'];
+          const csvRows = [];
+          
+          // Add headers
+          csvRows.push(headers.join(','));
+          
+          // Add data rows
+          wallets.forEach(wallet => {
+            const row = [
+              wallet.id,
+              `"${wallet.twitterHandle.replace(/"/g, '""')}"`,
+              `"${wallet.walletAddress}"`,
+              `"${new Date(wallet.timestamp).toLocaleDateString()}"`
+            ];
+            csvRows.push(row.join(','));
+          });
+
+          const csvContent = csvRows.join('\n');
+          console.log('CSV content created:', csvContent);
+          
+          // Create filename
+          const filename = `kairos-wallets-${new Date().toISOString().split('T')[0]}.csv`;
+          console.log('Filename:', filename);
+
+          // Method 1: Simple blob download with user interaction
+          try {
+            const blob = new Blob([csvContent], { 
+              type: 'text/csv;charset=utf-8' 
+            });
+            
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+            
+            link.href = url;
+            link.download = filename;
+            link.target = '_blank';
+            
+            // Make sure the link is visible and clickable
+            link.style.position = 'fixed';
+            link.style.top = '0';
+            link.style.left = '0';
+            link.style.opacity = '0';
+            link.style.pointerEvents = 'none';
+            
+              document.body.appendChild(link);
+            
+            // Trigger click
+              link.click();
+            
+            // Clean up
+            setTimeout(() => {
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+            }, 100);
+            
+            console.log('CSV download initiated successfully');
+            alert('CSV download started! Check your downloads folder.');
+            return;
+            
+          } catch (error) {
+            console.error('Blob download failed:', error);
+          }
+
+          // Method 2: Data URI with base64 encoding
+          try {
+            const base64Content = btoa(unescape(encodeURIComponent(csvContent)));
+            const dataUri = `data:text/csv;base64,${base64Content}`;
+            
+            const link2 = document.createElement('a');
+            link2.href = dataUri;
+            link2.download = filename;
+            link2.style.display = 'none';
+            
+            document.body.appendChild(link2);
+            link2.click();
+            document.body.removeChild(link2);
+            
+            console.log('CSV download via data URI initiated');
+            alert('CSV download started! Check your downloads folder.');
+            return;
+            
+          } catch (error) {
+            console.error('Data URI download failed:', error);
+          }
+
+          // Method 3: Copy to clipboard with instructions
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(csvContent).then(() => {
+                alert('CSV data copied to clipboard!\n\nPaste the data into a text editor and save it as:\n' + filename);
+              }).catch(() => {
+                // Fallback to manual copy
+                manualCopyToClipboard(csvContent, filename);
+              });
+            } else {
+              manualCopyToClipboard(csvContent, filename);
+            }
+          } catch (error) {
+            console.error('Clipboard copy failed:', error);
+            manualCopyToClipboard(csvContent, filename);
+          }
+        } catch (error) {
+          console.error('Error downloading CSV:', error);
+          alert('Error downloading CSV file. Please try again or check browser settings.');
+        }
+      }
+
+      function manualCopyToClipboard(content, filename) {
+        // Create a temporary textarea to select text
+        const textarea = document.createElement('textarea');
+        textarea.value = content;
+        textarea.style.position = 'fixed';
+        textarea.style.top = '0';
+        textarea.style.left = '0';
+        textarea.style.opacity = '0';
+        
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            alert('CSV data copied to clipboard!\n\nPaste the data into a text editor and save it as:\n' + filename);
+          } else {
+            alert('Please manually copy this data and save as ' + filename + ':\n\n' + content);
+          }
+        } catch (err) {
+          alert('Please manually copy this data and save as ' + filename + ':\n\n' + content);
+        }
+        
+        document.body.removeChild(textarea);
+      }
+
+      async function clearAllWallets() {
+        if (confirm('Are you sure you want to clear all wallet data? This action cannot be undone.')) {
+          await adminAPI.clearWallets();
+        }
+      }
+
+      // Event listeners
+      document.addEventListener('DOMContentLoaded', function() {
+        checkLogin();
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        
+        // Add event listener for download button
+        const downloadBtn = document.getElementById('downloadBtn');
+        if (downloadBtn) {
+          downloadBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Download button clicked via event listener');
+            downloadCSV();
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

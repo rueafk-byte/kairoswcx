@@ -1,0 +1,25 @@
+{
+  "name": "hyperwalletcollector",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "dev:with-db": "node src/utils/initDb.js && astro dev",
+    "build": "astro build",
+    "build:production": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "db:init": "node src/utils/initDb.js",
+    "db:migrate": "node src/utils/migrateData.js"
+  },
+  "dependencies": {
+    "@astrojs/netlify": "^6.5.10",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@tailwindcss/vite": "^4.1.13",
+    "airtable": "^0.12.2",
+    "astro": "^5.13.8"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21"
+  }
+}
