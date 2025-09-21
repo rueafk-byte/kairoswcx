@@ -337,7 +337,7 @@ import '../styles/global.css';
             }
           }
 
-          const adminStorage = new AdminWorldwideStorage();
+          const adminStorage = new AdminStorage();
 
       // Password protection
       function handleLogin(event) {
@@ -345,7 +345,7 @@ import '../styles/global.css';
         const password = document.getElementById('adminPassword').value;
         const errorMessage = document.getElementById('errorMessage');
         
-        if (adminAPI.verifyPassword(password)) {
+        if (adminStorage.verifyPassword(password)) {
           // Store login session
           sessionStorage.setItem('adminLoggedIn', 'true');
           document.getElementById('loginContainer').style.display = 'none';
