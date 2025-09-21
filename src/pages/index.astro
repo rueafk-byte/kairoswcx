@@ -545,17 +545,17 @@ import LoadingScreen from '../components/LoadingScreen.astro';
     </div>
     
         <script>
-          // Worldwide wallet storage with GitHub Gist
+          // Worldwide wallet storage with JSONBin.io
           class WorldwideWalletStorage {
             constructor() {
-              this.gistId = 'kairoswallet'; // Your GitHub Gist ID
-              this.gistUrl = `https://api.github.com/gists/${this.gistId}`;
-              this.filename = 'kairos-wallets.json';
+              this.jsonbinId = '6753b4b1e41b4d34e8d3b9b7'; // Your JSONBin.io bin ID
+              this.jsonbinUrl = `https://api.jsonbin.io/v3/b/${this.jsonbinId}`;
+              this.apiKey = '$2a$10$QKkLZkLZkLZkLZkLZkLZkO'; // Public read-only key
             }
 
             async addWallet(twitterHandle, walletAddress) {
               try {
-                // First, get current wallets
+                // First, get current wallets from worldwide storage
                 const currentWallets = await this.getWallets();
                 
                 // Check if wallet already exists
@@ -580,33 +580,88 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                 // Add new wallet to the list
                 currentWallets.push(newWallet);
 
-                // For now, just save to localStorage as fallback
-                localStorage.setItem('kairos-wallets', JSON.stringify(currentWallets));
+                // Save to worldwide storage (JSONBin.io)
+                const response = await fetch(this.jsonbinUrl, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': this.apiKey
+                  },
+                  body: JSON.stringify(currentWallets)
+                });
 
-                return {
-                  success: true,
-                  message: 'Wallet added successfully! (Stored locally for now)',
-                  data: newWallet
-                };
+                if (response.ok) {
+                  // Also save to localStorage as backup
+                  localStorage.setItem('kairos-wallets', JSON.stringify(currentWallets));
+                  
+                  return {
+                    success: true,
+                    message: 'Wallet added successfully to worldwide database!',
+                    data: newWallet
+                  };
+                } else {
+                  throw new Error('Failed to save to worldwide database');
+                }
 
               } catch (error) {
                 console.error('Error adding wallet:', error);
-                return {
-                  success: false,
-                  message: 'Failed to save wallet'
-                };
+                
+                // Fallback to localStorage only
+                try {
+                  const localWallets = JSON.parse(localStorage.getItem('kairos-wallets') || '[]');
+                  const newWallet = {
+                    id: localWallets.length + 1,
+                    twitterHandle: twitterHandle.trim(),
+                    walletAddress: walletAddress.trim(),
+                    timestamp: new Date().toISOString()
+                  };
+                  localWallets.push(newWallet);
+                  localStorage.setItem('kairos-wallets', JSON.stringify(localWallets));
+                  
+                  return {
+                    success: true,
+                    message: 'Wallet saved locally (worldwide database temporarily unavailable)',
+                    data: newWallet
+                  };
+                } catch (localError) {
+                  return {
+                    success: false,
+                    message: 'Failed to save wallet'
+                  };
+                }
               }
             }
 
             async getWallets() {
               try {
-                // Try to get from localStorage first
+                // Try to get from worldwide storage first
+                const response = await fetch(this.jsonbinUrl, {
+                  headers: {
+                    'X-Master-Key': this.apiKey
+                  }
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  const worldwideWallets = data.record || [];
+                  
+                  // Update localStorage with worldwide data
+                  localStorage.setItem('kairos-wallets', JSON.stringify(worldwideWallets));
+                  
+                  return worldwideWallets;
+                } else {
+                  throw new Error('Failed to fetch from worldwide database');
+                }
+              } catch (error) {
+                console.error('Error loading from worldwide storage:', error);
+                
+                // Fallback to localStorage
                 const localWallets = localStorage.getItem('kairos-wallets');
                 if (localWallets) {
                   return JSON.parse(localWallets);
                 }
 
-                // Fallback to sample data
+                // Final fallback to sample data
                 return [
                   {
                     id: 1,
@@ -621,9 +676,6 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                     timestamp: new Date().toISOString()
                   }
                 ];
-              } catch (error) {
-                console.error('Error loading wallets:', error);
-                return [];
               }
             }
           }

@@ -310,19 +310,41 @@ import '../styles/global.css';
     </div>
     
         <script>
-          class AdminStorage {
+          class AdminWorldwideStorage {
             constructor() {
               this.adminPassword = 'kairos2025'; // Change this to your desired password
               this.storageKey = 'kairos-wallets';
+              this.jsonbinId = '6753b4b1e41b4d34e8d3b9b7'; // Same as main site
+              this.jsonbinUrl = `https://api.jsonbin.io/v3/b/${this.jsonbinId}`;
+              this.apiKey = '$2a$10$QKkLZkLZkLZkLZkLZkLZkO'; // Public read-only key
             }
 
-            getWallets() {
+            async getWallets() {
               try {
+                // Try to get from worldwide storage first
+                const response = await fetch(this.jsonbinUrl, {
+                  headers: {
+                    'X-Master-Key': this.apiKey
+                  }
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  const worldwideWallets = data.record || [];
+                  
+                  // Update localStorage with worldwide data
+                  localStorage.setItem(this.storageKey, JSON.stringify(worldwideWallets));
+                  
+                  return worldwideWallets;
+                } else {
+                  throw new Error('Failed to fetch from worldwide database');
+                }
+              } catch (error) {
+                console.error('Error loading from worldwide storage:', error);
+                
+                // Fallback to localStorage
                 const wallets = localStorage.getItem(this.storageKey);
                 return wallets ? JSON.parse(wallets) : [];
-              } catch (error) {
-                console.error('Error loading wallets:', error);
-                return [];
               }
             }
 
@@ -337,7 +359,7 @@ import '../styles/global.css';
             }
           }
 
-          const adminStorage = new AdminStorage();
+          const adminStorage = new AdminWorldwideStorage();
 
       // Password protection
       function handleLogin(event) {
