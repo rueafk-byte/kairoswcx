@@ -545,20 +545,66 @@ import LoadingScreen from '../components/LoadingScreen.astro';
     </div>
     
         <script>
-          // Worldwide wallet storage with localStorage + shared data
+          // Worldwide wallet storage with Supabase
           class WorldwideWalletStorage {
             constructor() {
+              this.supabaseUrl = 'https://your-project.supabase.co'; // Replace with your Supabase URL
+              this.supabaseKey = 'your-anon-key'; // Replace with your Supabase anon key
               this.storageKey = 'kairos-wallets';
-              this.sharedDataUrl = 'https://api.github.com/gists/kairoswallet'; // We'll create this
             }
 
             async addWallet(twitterHandle, walletAddress) {
               try {
-                // Get current wallets
-                const currentWallets = await this.getWallets();
+                // Try Supabase first
+                const response = await fetch(`${this.supabaseUrl}/rest/v1/wallets`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': this.supabaseKey,
+                    'Authorization': `Bearer ${this.supabaseKey}`
+                  },
+                  body: JSON.stringify({
+                    twitter_handle: twitterHandle.trim(),
+                    wallet_address: walletAddress.trim().toLowerCase()
+                  })
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  
+                  // Also save to localStorage as backup
+                  const localWallets = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+                  localWallets.push({
+                    id: data[0].id,
+                    twitterHandle: twitterHandle.trim(),
+                    walletAddress: walletAddress.trim(),
+                    timestamp: data[0].created_at
+                  });
+                  localStorage.setItem(this.storageKey, JSON.stringify(localWallets));
+                  
+                  return {
+                    success: true,
+                    message: 'Wallet added successfully to worldwide database!',
+                    data: data[0]
+                  };
+                } else {
+                  // Fallback to localStorage
+                  return this.addWalletLocal(twitterHandle, walletAddress);
+                }
+
+              } catch (error) {
+                console.error('Supabase error:', error);
+                // Fallback to localStorage
+                return this.addWalletLocal(twitterHandle, walletAddress);
+              }
+            }
+
+            async addWalletLocal(twitterHandle, walletAddress) {
+              try {
+                const localWallets = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
                 
                 // Check if wallet already exists
-                const exists = currentWallets.some(w => 
+                const exists = localWallets.some(w => 
                   w.walletAddress.toLowerCase() === walletAddress.toLowerCase()
                 );
                 
@@ -570,29 +616,23 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                 }
 
                 const newWallet = {
-                  id: currentWallets.length + 1,
+                  id: localWallets.length + 1,
                   twitterHandle: twitterHandle.trim(),
                   walletAddress: walletAddress.trim(),
                   timestamp: new Date().toISOString()
                 };
 
-                // Add new wallet to the list
-                currentWallets.push(newWallet);
-
-                // Save to localStorage (this will work immediately)
-                localStorage.setItem(this.storageKey, JSON.stringify(currentWallets));
-                
-                // Try to sync with shared storage (optional)
-                this.syncToSharedStorage(currentWallets);
+                localWallets.push(newWallet);
+                localStorage.setItem(this.storageKey, JSON.stringify(localWallets));
                 
                 return {
                   success: true,
-                  message: 'Wallet added successfully! (Stored in shared database)',
+                  message: 'Wallet saved locally (worldwide database temporarily unavailable)',
                   data: newWallet
                 };
 
               } catch (error) {
-                console.error('Error adding wallet:', error);
+                console.error('Error adding wallet locally:', error);
                 return {
                   success: false,
                   message: 'Failed to save wallet'
@@ -602,13 +642,41 @@ import LoadingScreen from '../components/LoadingScreen.astro';
 
             async getWallets() {
               try {
-                // Get from localStorage
+                // Try Supabase first
+                const response = await fetch(`${this.supabaseUrl}/rest/v1/wallets?select=*&order=created_at.desc`, {
+                  headers: {
+                    'apikey': this.supabaseKey,
+                    'Authorization': `Bearer ${this.supabaseKey}`
+                  }
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  
+                  // Update localStorage with worldwide data
+                  const formattedWallets = data.map(w => ({
+                    id: w.id,
+                    twitterHandle: w.twitter_handle,
+                    walletAddress: w.wallet_address,
+                    timestamp: w.created_at
+                  }));
+                  localStorage.setItem(this.storageKey, JSON.stringify(formattedWallets));
+                  
+                  return formattedWallets;
+                } else {
+                  throw new Error('Supabase unavailable');
+                }
+
+              } catch (error) {
+                console.error('Supabase error:', error);
+                
+                // Fallback to localStorage
                 const localWallets = localStorage.getItem(this.storageKey);
                 if (localWallets) {
                   return JSON.parse(localWallets);
                 }
 
-                // Initialize with sample data if empty
+                // Initialize with sample data
                 const sampleWallets = [
                   {
                     id: 1,
@@ -626,17 +694,7 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                 
                 localStorage.setItem(this.storageKey, JSON.stringify(sampleWallets));
                 return sampleWallets;
-
-              } catch (error) {
-                console.error('Error loading wallets:', error);
-                return [];
               }
-            }
-
-            async syncToSharedStorage(wallets) {
-              // This is for future enhancement - for now just use localStorage
-              // In a real app, you'd sync with a shared database here
-              console.log('Syncing to shared storage:', wallets.length, 'wallets');
             }
           }
 
