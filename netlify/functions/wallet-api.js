@@ -4,7 +4,7 @@ const Airtable = require('airtable');
 // Airtable configuration
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY || 'your-api-key-here';
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'your-base-id-here';
-const AIRTABLE_TABLE_NAME = 'Wallets';
+const AIRTABLE_TABLE_NAME = 'Table 1';
 
 // Initialize Airtable
 const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID);
@@ -51,7 +51,7 @@ async function getWalletsFromStorage() {
       recordsPage.forEach(function(record) {
         records.push({
           id: record.get('ID') || record.id,
-          twitterHandle: record.get('A Twitter Handle') || record.get('Twitter Handle') || '',
+          twitterHandle: record.get('Twitter Handle') || '',
           walletAddress: record.get('Wallet Address') || '',
           timestamp: record.get('Created') || record.createdTime
         });
@@ -93,9 +93,8 @@ async function saveWalletsToStorage(wallets) {
     await base(AIRTABLE_TABLE_NAME).create([
       {
         fields: {
-          'A Twitter Handle': newWallet.twitterHandle,
-          'Wallet Address': newWallet.walletAddress,
-          'Created': new Date().toISOString()
+          'Twitter Handle': newWallet.twitterHandle,
+          'Wallet Address': newWallet.walletAddress
         }
       }
     ]);
