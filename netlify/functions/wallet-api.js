@@ -51,7 +51,7 @@ async function getWalletsFromStorage() {
       recordsPage.forEach(function(record) {
         records.push({
           id: record.get('ID') || record.id,
-          twitterHandle: record.get('Twitter Handle') || '',
+          twitterHandle: record.get('A Twitter Handle') || record.get('Twitter Handle') || '',
           walletAddress: record.get('Wallet Address') || '',
           timestamp: record.get('Created') || record.createdTime
         });
@@ -93,7 +93,7 @@ async function saveWalletsToStorage(wallets) {
     await base(AIRTABLE_TABLE_NAME).create([
       {
         fields: {
-          'Twitter Handle': newWallet.twitterHandle,
+          'A Twitter Handle': newWallet.twitterHandle,
           'Wallet Address': newWallet.walletAddress,
           'Created': new Date().toISOString()
         }
