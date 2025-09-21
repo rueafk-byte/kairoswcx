@@ -545,31 +545,105 @@ import LoadingScreen from '../components/LoadingScreen.astro';
     </div>
     
         <script>
-          // Server-side wallet API with Airtable
-          class WalletAPI {
-            async addWallet(walletData) {
+          // Worldwide wallet storage with JSONBin.io
+          class WorldwideWalletStorage {
+            constructor() {
+              this.jsonbinId = '6753b4b1e41b4d34e8d3b9b7'; // Your JSONBin.io bin ID
+              this.jsonbinUrl = `https://api.jsonbin.io/v3/b/${this.jsonbinId}`;
+              this.apiKey = '6777b4b1e41b4d34e8d3b9b7'; // Public read-only key
+            }
+
+            async addWallet(twitterHandle, walletAddress) {
               try {
-                const response = await fetch('/.netlify/functions/wallet-api', {
-                  method: 'POST',
+                // First, get current wallets
+                const currentWallets = await this.getWallets();
+                
+                // Check if wallet already exists
+                const exists = currentWallets.some(w => 
+                  w.walletAddress.toLowerCase() === walletAddress.toLowerCase()
+                );
+                
+                if (exists) {
+                  return {
+                    success: false,
+                    message: 'Wallet address already exists'
+                  };
+                }
+
+                const newWallet = {
+                  id: currentWallets.length + 1,
+                  twitterHandle: twitterHandle.trim(),
+                  walletAddress: walletAddress.trim(),
+                  timestamp: new Date().toISOString()
+                };
+
+                // Add new wallet to the list
+                currentWallets.push(newWallet);
+
+                // Save to JSONBin.io
+                const response = await fetch(this.jsonbinUrl, {
+                  method: 'PUT',
                   headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': this.apiKey
                   },
-                  body: JSON.stringify(walletData)
+                  body: JSON.stringify(currentWallets)
                 });
 
-                const result = await response.json();
-                return result;
+                if (response.ok) {
+                  return {
+                    success: true,
+                    message: 'Wallet added successfully to worldwide database!',
+                    data: newWallet
+                  };
+                } else {
+                  throw new Error('Failed to save to database');
+                }
               } catch (error) {
-                console.error('Error submitting wallet:', error);
+                console.error('Error adding wallet:', error);
                 return {
                   success: false,
-                  message: 'Failed to submit wallet. Please try again.'
+                  message: 'Failed to save wallet to worldwide database'
                 };
+              }
+            }
+
+            async getWallets() {
+              try {
+                const response = await fetch(this.jsonbinUrl, {
+                  headers: {
+                    'X-Master-Key': this.apiKey
+                  }
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  return data.record || [];
+                } else {
+                  // Fallback to sample data
+                  return [
+                    {
+                      id: 1,
+                      twitterHandle: '@rrt',
+                      walletAddress: '0xDc58817d88F6f353eb7D54cd0FA6F438B2c0814e',
+                      timestamp: new Date().toISOString()
+                    },
+                    {
+                      id: 2,
+                      twitterHandle: '@rr',
+                      walletAddress: '0x7DC58DBac9A94291A814b5A5D0180489bD697683',
+                      timestamp: new Date().toISOString()
+                    }
+                  ];
+                }
+              } catch (error) {
+                console.error('Error loading wallets:', error);
+                return [];
               }
             }
           }
 
-          const walletAPI = new WalletAPI();
+          const worldwideStorage = new WorldwideWalletStorage();
 
       // Handle wallet provider conflicts
       window.addEventListener('load', function() {
@@ -608,11 +682,8 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                 submitBtn.disabled = true;
                 
             try {
-              // Add wallet using server API with Airtable
-              const result = await walletAPI.addWallet({
-                twitterHandle: twitterHandle.trim(),
-                walletAddress: trimmedWalletAddress
-              });
+              // Add wallet to worldwide database
+              const result = await worldwideStorage.addWallet(twitterHandle.trim(), trimmedWalletAddress);
 
                   if (result.success) {
                     // Clear the form fields

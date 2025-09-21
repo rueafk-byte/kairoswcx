@@ -310,18 +310,30 @@ import '../styles/global.css';
     </div>
     
         <script>
-          class AdminAPI {
+          class AdminWorldwideStorage {
             constructor() {
               this.adminPassword = 'kairos2025'; // Change this to your desired password
+              this.jsonbinId = '6753b4b1e41b4d34e8d3b9b7'; // Same as main site
+              this.jsonbinUrl = `https://api.jsonbin.io/v3/b/${this.jsonbinId}`;
+              this.apiKey = '6777b4b1e41b4d34e8d3b9b7'; // Public read-only key
             }
 
             async getWallets() {
               try {
-                const response = await fetch('/.netlify/functions/wallet-api');
-                const result = await response.json();
-                return result.success ? result.data : [];
+                const response = await fetch(this.jsonbinUrl, {
+                  headers: {
+                    'X-Master-Key': this.apiKey
+                  }
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  return data.record || [];
+                } else {
+                  return [];
+                }
               } catch (error) {
-                console.error('Error fetching wallets:', error);
+                console.error('Error loading wallets:', error);
                 return [];
               }
             }
@@ -337,7 +349,7 @@ import '../styles/global.css';
             }
           }
 
-          const adminAPI = new AdminAPI();
+          const adminStorage = new AdminWorldwideStorage();
 
       // Password protection
       function handleLogin(event) {
@@ -377,8 +389,8 @@ import '../styles/global.css';
         // Show loading state
         container.innerHTML = '<div class="empty-state">Loading wallets...</div>';
 
-            try {
-              const wallets = await adminAPI.getWallets();
+        try {
+          const wallets = await adminStorage.getWallets();
 
           // Update stats
           totalElement.textContent = wallets.length;
@@ -418,8 +430,8 @@ import '../styles/global.css';
       async function downloadCSV() {
         console.log('Download CSV button clicked');
         
-            try {
-              const wallets = await adminAPI.getWallets();
+        try {
+          const wallets = await adminStorage.getWallets();
           console.log('Wallets found:', wallets.length);
           
           if (wallets.length === 0) {
