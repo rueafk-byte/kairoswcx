@@ -545,12 +545,12 @@ import LoadingScreen from '../components/LoadingScreen.astro';
     </div>
     
         <script>
-          // Worldwide wallet storage with JSONBin.io
+          // Worldwide wallet storage with GitHub Gist
           class WorldwideWalletStorage {
             constructor() {
-              this.jsonbinId = '6753b4b1e41b4d34e8d3b9b7'; // Your JSONBin.io bin ID
-              this.jsonbinUrl = `https://api.jsonbin.io/v3/b/${this.jsonbinId}`;
-              this.apiKey = '6777b4b1e41b4d34e8d3b9b7'; // Public read-only key
+              this.gistId = 'kairoswallet'; // Your GitHub Gist ID
+              this.gistUrl = `https://api.github.com/gists/${this.gistId}`;
+              this.filename = 'kairos-wallets.json';
             }
 
             async addWallet(twitterHandle, walletAddress) {
@@ -580,62 +580,47 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                 // Add new wallet to the list
                 currentWallets.push(newWallet);
 
-                // Save to JSONBin.io
-                const response = await fetch(this.jsonbinUrl, {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': this.apiKey
-                  },
-                  body: JSON.stringify(currentWallets)
-                });
+                // For now, just save to localStorage as fallback
+                localStorage.setItem('kairos-wallets', JSON.stringify(currentWallets));
 
-                if (response.ok) {
-                  return {
-                    success: true,
-                    message: 'Wallet added successfully to worldwide database!',
-                    data: newWallet
-                  };
-                } else {
-                  throw new Error('Failed to save to database');
-                }
+                return {
+                  success: true,
+                  message: 'Wallet added successfully! (Stored locally for now)',
+                  data: newWallet
+                };
+
               } catch (error) {
                 console.error('Error adding wallet:', error);
                 return {
                   success: false,
-                  message: 'Failed to save wallet to worldwide database'
+                  message: 'Failed to save wallet'
                 };
               }
             }
 
             async getWallets() {
               try {
-                const response = await fetch(this.jsonbinUrl, {
-                  headers: {
-                    'X-Master-Key': this.apiKey
-                  }
-                });
-
-                if (response.ok) {
-                  const data = await response.json();
-                  return data.record || [];
-                } else {
-                  // Fallback to sample data
-                  return [
-                    {
-                      id: 1,
-                      twitterHandle: '@rrt',
-                      walletAddress: '0xDc58817d88F6f353eb7D54cd0FA6F438B2c0814e',
-                      timestamp: new Date().toISOString()
-                    },
-                    {
-                      id: 2,
-                      twitterHandle: '@rr',
-                      walletAddress: '0x7DC58DBac9A94291A814b5A5D0180489bD697683',
-                      timestamp: new Date().toISOString()
-                    }
-                  ];
+                // Try to get from localStorage first
+                const localWallets = localStorage.getItem('kairos-wallets');
+                if (localWallets) {
+                  return JSON.parse(localWallets);
                 }
+
+                // Fallback to sample data
+                return [
+                  {
+                    id: 1,
+                    twitterHandle: '@rrt',
+                    walletAddress: '0xDc58817d88F6f353eb7D54cd0FA6F438B2c0814e',
+                    timestamp: new Date().toISOString()
+                  },
+                  {
+                    id: 2,
+                    twitterHandle: '@rr',
+                    walletAddress: '0x7DC58DBac9A94291A814b5A5D0180489bD697683',
+                    timestamp: new Date().toISOString()
+                  }
+                ];
               } catch (error) {
                 console.error('Error loading wallets:', error);
                 return [];
