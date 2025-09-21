@@ -545,27 +545,29 @@ import LoadingScreen from '../components/LoadingScreen.astro';
     </div>
     
         <script>
-          // Worldwide wallet storage with Supabase
+          // Worldwide wallet storage with Airtable
           class WorldwideWalletStorage {
             constructor() {
-              this.supabaseUrl = 'https://your-project.supabase.co'; // Replace with your Supabase URL
-              this.supabaseKey = 'your-anon-key'; // Replace with your Supabase anon key
+              this.airtableApiKey = 'YOUR_AIRTABLE_API_KEY'; // Replace with your Airtable API key
+              this.airtableBaseId = 'apprTT54N6yro3L44';
+              this.airtableTableName = 'Table 1';
               this.storageKey = 'kairos-wallets';
             }
 
             async addWallet(twitterHandle, walletAddress) {
               try {
-                // Try Supabase first
-                const response = await fetch(`${this.supabaseUrl}/rest/v1/wallets`, {
+                // Try Airtable first
+                const response = await fetch(`https://api.airtable.com/v0/${this.airtableBaseId}/${this.airtableTableName}`, {
                   method: 'POST',
                   headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': this.supabaseKey,
-                    'Authorization': `Bearer ${this.supabaseKey}`
+                    'Authorization': `Bearer ${this.airtableApiKey}`,
+                    'Content-Type': 'application/json'
                   },
                   body: JSON.stringify({
-                    twitter_handle: twitterHandle.trim(),
-                    wallet_address: walletAddress.trim().toLowerCase()
+                    fields: {
+                      'Twitter Handle': twitterHandle.trim(),
+                      'Wallet Address': walletAddress.trim()
+                    }
                   })
                 });
 
@@ -575,17 +577,17 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                   // Also save to localStorage as backup
                   const localWallets = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
                   localWallets.push({
-                    id: data[0].id,
+                    id: data.id,
                     twitterHandle: twitterHandle.trim(),
                     walletAddress: walletAddress.trim(),
-                    timestamp: data[0].created_at
+                    timestamp: data.createdTime
                   });
                   localStorage.setItem(this.storageKey, JSON.stringify(localWallets));
                   
                   return {
                     success: true,
-                    message: 'Wallet added successfully to worldwide database!',
-                    data: data[0]
+                    message: 'Wallet added successfully to Airtable worldwide database!',
+                    data: data
                   };
                 } else {
                   // Fallback to localStorage
@@ -593,7 +595,7 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                 }
 
               } catch (error) {
-                console.error('Supabase error:', error);
+                console.error('Airtable error:', error);
                 // Fallback to localStorage
                 return this.addWalletLocal(twitterHandle, walletAddress);
               }
@@ -627,7 +629,7 @@ import LoadingScreen from '../components/LoadingScreen.astro';
                 
                 return {
                   success: true,
-                  message: 'Wallet saved locally (worldwide database temporarily unavailable)',
+                  message: 'Wallet saved locally (Airtable temporarily unavailable)',
                   data: newWallet
                 };
 
@@ -642,33 +644,34 @@ import LoadingScreen from '../components/LoadingScreen.astro';
 
             async getWallets() {
               try {
-                // Try Supabase first
-                const response = await fetch(`${this.supabaseUrl}/rest/v1/wallets?select=*&order=created_at.desc`, {
+                // Try Airtable first
+                const response = await fetch(`https://api.airtable.com/v0/${this.airtableBaseId}/${this.airtableTableName}?sort%5B0%5D%5Bfield%5D=Created&sort%5B0%5D%5Bdirection%5D=desc`, {
                   headers: {
-                    'apikey': this.supabaseKey,
-                    'Authorization': `Bearer ${this.supabaseKey}`
+                    'Authorization': `Bearer ${this.airtableApiKey}`
                   }
                 });
 
                 if (response.ok) {
                   const data = await response.json();
                   
-                  // Update localStorage with worldwide data
-                  const formattedWallets = data.map(w => ({
-                    id: w.id,
-                    twitterHandle: w.twitter_handle,
-                    walletAddress: w.wallet_address,
-                    timestamp: w.created_at
+                  // Format Airtable data
+                  const formattedWallets = data.records.map(record => ({
+                    id: record.id,
+                    twitterHandle: record.fields['Twitter Handle'] || '',
+                    walletAddress: record.fields['Wallet Address'] || '',
+                    timestamp: record.fields['Created'] || record.createdTime
                   }));
+                  
+                  // Update localStorage with worldwide data
                   localStorage.setItem(this.storageKey, JSON.stringify(formattedWallets));
                   
                   return formattedWallets;
                 } else {
-                  throw new Error('Supabase unavailable');
+                  throw new Error('Airtable unavailable');
                 }
 
               } catch (error) {
-                console.error('Supabase error:', error);
+                console.error('Airtable error:', error);
                 
                 // Fallback to localStorage
                 const localWallets = localStorage.getItem(this.storageKey);
