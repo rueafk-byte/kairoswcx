@@ -228,20 +228,49 @@ import LoadingScreen from '../components/LoadingScreen.astro';
         align-items: center;
         z-index: 1000;
         display: none;
+        background-color: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
       }
       
       .follow-content {
-        background-color: rgba(31, 41, 55, 0.5); /* More transparent - reduced from 0.7 to 0.5 */
-        backdrop-filter: blur(10px);
-        border-radius: 1rem;
-        padding: 2.5rem;
-        box-shadow: 0 0 15px rgba(100, 149, 237, 0.5);
-        border: 1px solid rgba(100, 149, 237, 0.3);
-        animation: cardEntrance 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-        max-width: 32rem;
-        width: 100%;
+        background-color: rgba(15, 23, 42, 0.85); /* More transparent dark blue */
+        backdrop-filter: blur(15px);
+        border-radius: 0; /* Remove rounded corners for pixel look */
+        padding: 2rem;
+        box-shadow: 
+          0 0 20px rgba(96, 165, 250, 0.4),
+          inset 0 0 20px rgba(96, 165, 250, 0.1),
+          0 0 0 2px rgba(96, 165, 250, 0.6),
+          0 0 0 4px rgba(79, 70, 229, 0.3);
+        border: 2px solid rgba(96, 165, 250, 0.8);
+        animation: pixelBoxEntrance 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        max-width: 28rem;
+        width: 90%;
         text-align: center;
         font-family: 'Press Start 2P', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        position: relative;
+        /* Pixelated effect */
+        image-rendering: pixelated;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+      }
+      
+      .follow-content::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, 
+          rgba(96, 165, 250, 0.3) 0%, 
+          rgba(79, 70, 229, 0.3) 25%, 
+          rgba(168, 85, 247, 0.3) 50%, 
+          rgba(96, 165, 250, 0.3) 75%, 
+          rgba(79, 70, 229, 0.3) 100%);
+        background-size: 20px 20px;
+        z-index: -1;
+        animation: pixelGlow 2s linear infinite;
       }
       
       .follow-text {
@@ -252,36 +281,54 @@ import LoadingScreen from '../components/LoadingScreen.astro';
       }
       
       .follow-btn {
-        border-radius: 0.5rem; /* Same as form inputs */
+        border-radius: 0; /* Remove rounded corners for pixel look */
         background: linear-gradient(45deg, #4f46e5, #60a5fa, #a855f7);
         background-size: 200% 200%;
-        padding: 0.75rem; /* Same as form inputs */
+        padding: 1rem 1.5rem; /* More padding for better button size */
         font-weight: normal;
         color: #ffffff;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         width: 100%;
-        border: none;
+        border: 2px solid rgba(255, 255, 255, 0.3); /* Pixel border */
         cursor: pointer;
         font-size: 0.875rem;
         box-sizing: border-box;
         font-family: 'Press Start 2P', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         animation: gradientShift 3s ease infinite;
-        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        box-shadow: 
+          0 0 0 1px rgba(255, 255, 255, 0.2),
+          0 4px 15px rgba(79, 70, 229, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        position: relative;
+        text-transform: uppercase;
+        letter-spacing: 1px;
       }
       
       .follow-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
-        animation: gradientShift 1s ease infinite, pulse 2s infinite ease-in-out;
+        transform: translateY(-1px); /* Smaller hover effect for pixel feel */
+        box-shadow: 
+          0 0 0 1px rgba(255, 255, 255, 0.4),
+          0 6px 20px rgba(79, 70, 229, 0.6),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        animation: gradientShift 1s ease infinite, pixelPulse 1.5s infinite ease-in-out;
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+      
+      .follow-btn:active {
+        transform: translateY(0);
+        box-shadow: 
+          0 0 0 1px rgba(255, 255, 255, 0.2),
+          0 2px 8px rgba(79, 70, 229, 0.4),
+          inset 0 2px 4px rgba(0, 0, 0, 0.3);
       }
       
       .close-btn {
-        background: transparent;
-        border: 1px solid #60a5fa;
+        background: rgba(15, 23, 42, 0.9);
+        border: 2px solid rgba(96, 165, 250, 0.8);
         color: #60a5fa;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
+        border-radius: 0; /* Pixel look */
+        width: 32px;
+        height: 32px;
         cursor: pointer;
         font-family: 'Press Start 2P', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         font-size: 0.75rem;
@@ -289,11 +336,20 @@ import LoadingScreen from '../components/LoadingScreen.astro';
         position: absolute;
         top: 10px;
         right: 10px;
+        box-shadow: 
+          0 0 0 1px rgba(255, 255, 255, 0.2),
+          0 2px 8px rgba(96, 165, 250, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
       }
       
       .close-btn:hover {
         background-color: rgba(96, 165, 250, 0.2);
-        transform: scale(1.1);
+        transform: scale(1.05);
+        border-color: rgba(96, 165, 250, 1);
+        box-shadow: 
+          0 0 0 1px rgba(255, 255, 255, 0.4),
+          0 4px 12px rgba(96, 165, 250, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
       }
       
       /* Fireball styles */
@@ -417,6 +473,56 @@ import LoadingScreen from '../components/LoadingScreen.astro';
         }
         100% { 
           transform: translateY(0px); 
+        }
+      }
+      
+      @keyframes pixelBoxEntrance {
+        0% { 
+          opacity: 0; 
+          transform: scale(0.8) translateY(30px);
+          filter: blur(10px);
+        }
+        50% {
+          opacity: 0.8;
+          transform: scale(1.05) translateY(-5px);
+          filter: blur(2px);
+        }
+        100% { 
+          opacity: 1; 
+          transform: scale(1) translateY(0);
+          filter: blur(0);
+        }
+      }
+      
+      @keyframes pixelGlow {
+        0% { 
+          background-position: 0% 0%; 
+          opacity: 0.3;
+        }
+        50% { 
+          background-position: 100% 100%; 
+          opacity: 0.6;
+        }
+        100% { 
+          background-position: 0% 0%; 
+          opacity: 0.3;
+        }
+      }
+      
+      @keyframes pixelPulse {
+        0%, 100% { 
+          box-shadow: 
+            0 0 0 1px rgba(255, 255, 255, 0.4),
+            0 6px 20px rgba(79, 70, 229, 0.6),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          border-color: rgba(255, 255, 255, 0.5);
+        }
+        50% { 
+          box-shadow: 
+            0 0 0 1px rgba(255, 255, 255, 0.6),
+            0 8px 25px rgba(79, 70, 229, 0.8),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+          border-color: rgba(255, 255, 255, 0.7);
         }
       }
       
